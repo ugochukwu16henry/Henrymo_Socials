@@ -1,0 +1,239 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Users & Teams
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String
+  passwordHash  String   @map("password_hash")
+  emailVerified Boolean  @default(false) @map("email_verified")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  ownedTeams    Team[]   @relation("TeamOwner")
+  teamMemberships TeamMember[]
+  socialAccounts SocialAccount[]
+  posts         Post[]
+  createdReports Report[]
+
+  @@map("users")
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String
+  ownerId   String   @map("owner_id")
+  planTier  String   @default("free") @map("plan_tier") // free, pro, agency
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  owner      User         @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members    TeamMember[]
+  socialAccounts SocialAccount[]
+  posts      Post[]
+  keywords   Keyword[]
+  competitorAccounts CompetitorAccount[]
+  automationRules AutomationRule[]
+  reports    Report[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  teamId    String   @map("team_id")
+  userId    String   @map("user_id")
+  role      String   // admin, editor, viewer
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+// Social Accounts
+model SocialAccount {
+  id             String   @id @default(uuid())
+  teamId         String   @map("team_id")
+  userId         String   @map("user_id")
+  platform       String   // instagram, facebook, linkedin, twitter, tiktok, youtube
+  platformUserId String   @map("platform_user_id")
+  handle         String
+  accessToken    String   @map("access_token") @db.Text
+  refreshToken   String?  @map("refresh_token") @db.Text
+  expiresAt      DateTime? @map("expires_at")
+  isActive       Boolean  @default(true) @map("is_active")
+  connectedAt    DateTime @default(now()) @map("connected_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  team           Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  metricsDaily   MetricsDaily[]
+  posts          PostPlatform[]
+
+  @@unique([teamId, platform, platformUserId])
+  @@map("social_accounts")
+}
+
+// Content & Posts
+model Post {
+  id          String   @id @default(uuid())
+  teamId      String   @map("team_id")
+  userId      String   @map("user_id")
+  contentText String   @map("content_text") @db.Text
+  mediaUrls   Json?    @map("media_urls") // Array of media URLs
+  scheduledAt DateTime? @map("scheduled_at")
+  publishedAt DateTime? @map("published_at")
+  status      String   // draft, scheduled, published, failed
+  performance Json?    // Cached metrics: { likes, comments, shares, reach, impressions }
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platforms   PostPlatform[]
+
+  @@index([teamId, status])
+  @@index([scheduledAt])
+  @@map("posts")
+}
+
+model PostPlatform {
+  id             String   @id @default(uuid())
+  postId         String   @map("post_id")
+  socialAccountId String   @map("social_account_id")
+  platformPostId String?  @map("platform_post_id") // ID returned by platform API
+  status         String   // pending, published, failed
+  errorMessage   String?  @map("error_message") @db.Text
+  publishedAt    DateTime? @map("published_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  post           Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  socialAccount  SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@map("post_platforms")
+}
+
+// Analytics
+model MetricsDaily {
+  id              String   @id @default(uuid())
+  socialAccountId String   @map("social_account_id")
+  date            DateTime @db.Date
+  impressions     Int      @default(0)
+  reach           Int      @default(0)
+  likes           Int      @default(0)
+  comments        Int      @default(0)
+  shares          Int      @default(0)
+  saves           Int      @default(0)
+  profileVisits   Int      @default(0) @map("profile_visits")
+  followsGained   Int      @default(0) @map("follows_gained")
+  followsLost     Int      @default(0) @map("follows_lost")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  socialAccount   SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([socialAccountId, date])
+  @@index([socialAccountId, date])
+  @@map("metrics_daily")
+}
+
+// Research Data
+model Keyword {
+  id                String   @id @default(uuid())
+  teamId            String   @map("team_id")
+  keyword           String
+  platform          String?  // null for general keywords
+  avgMonthlyVolume  Int?     @map("avg_monthly_volume")
+  competitionScore  Float?   @map("competition_score")
+  trendData         Json?    @map("trend_data")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  team              Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId, keyword])
+  @@map("keywords")
+}
+
+model CompetitorAccount {
+  id              String   @id @default(uuid())
+  teamId          String   @map("team_id")
+  platform        String
+  handle          String
+  platformUserId  String?  @map("platform_user_id")
+  benchmarkMetrics Json?   @map("benchmark_metrics")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  team            Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, platform, handle])
+  @@map("competitor_accounts")
+}
+
+// Automation Rules
+model AutomationRule {
+  id           String   @id @default(uuid())
+  teamId       String   @map("team_id")
+  name         String
+  triggerType  String   @map("trigger_type") // engagement_threshold, keyword_mention, time_based, etc.
+  triggerConfig Json    @map("trigger_config")
+  actionType   String   @map("action_type") // send_email, publish_post, notify_slack, etc.
+  actionConfig Json     @map("action_config")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  team         Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId, isActive])
+  @@map("automation_rules")
+}
+
+// Reporting
+model Report {
+  id          String   @id @default(uuid())
+  teamId      String   @map("team_id")
+  userId      String   @map("user_id")
+  name        String
+  type        String   // weekly, monthly, custom
+  config      Json     // Report configuration
+  generatedAt DateTime? @map("generated_at")
+  fileUrl     String?  @map("file_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+  @@map("reports")
+}
+
