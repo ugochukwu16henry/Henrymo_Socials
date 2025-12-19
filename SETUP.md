@@ -34,6 +34,7 @@ cp backend/.env.example backend/.env
 ```
 
 Edit `backend/.env` and update:
+
 - `DATABASE_URL` - PostgreSQL connection string
 - `JWT_SECRET` - A secure random string for JWT tokens
 - `REDIS_HOST` and `REDIS_PORT` - Redis connection details
@@ -51,16 +52,19 @@ npm run migration:run
 ### 5. Start Development Servers
 
 **Terminal 1 - Backend:**
+
 ```bash
 npm run dev:backend
 ```
 
 **Terminal 2 - Frontend:**
+
 ```bash
 npm run dev:frontend
 ```
 
 The application will be available at:
+
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3000
 - API Documentation: http://localhost:3000/api/docs
@@ -68,11 +72,13 @@ The application will be available at:
 ## Database Setup (Without Docker)
 
 1. Create a PostgreSQL database:
+
 ```sql
 CREATE DATABASE henrymo_socials;
 ```
 
 2. Update `DATABASE_URL` in `backend/.env`:
+
 ```
 DATABASE_URL="postgresql://username:password@localhost:5432/henrymo_socials?schema=public"
 ```
@@ -125,15 +131,17 @@ npm test
 ## Troubleshooting
 
 ### Database Connection Issues
+
 - Ensure PostgreSQL is running
 - Check DATABASE_URL in `.env` file
 - Verify database exists: `psql -U postgres -l`
 
 ### Redis Connection Issues
+
 - Ensure Redis is running: `redis-cli ping`
 - Check REDIS_HOST and REDIS_PORT in `.env`
 
 ### Port Already in Use
+
 - Change PORT in `backend/.env` (default: 3000)
 - Change port in `frontend/vite.config.ts` (default: 5173)
-

@@ -8,11 +8,14 @@ export class ContentService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: string, teamId: string, createPostDto: CreatePostDto) {
-    const { platformIds, ...postData } = createPostDto;
+    const { platformIds, mediaUrls, scheduledAt, status, contentText } = createPostDto;
     
     const post = await this.prisma.post.create({
       data: {
-        ...postData,
+        contentText,
+        mediaUrls: mediaUrls ? mediaUrls : null,
+        scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+        status: status || 'draft',
         userId,
         teamId,
       },
@@ -80,10 +83,26 @@ export class ContentService {
   }
 
   async update(id: string, teamId: string, updatePostDto: UpdatePostDto) {
-    return this.prisma.post.updateMany({
+    const { mediaUrls, scheduledAt, ...rest } = updatePostDto;
+    const updateData: any = { ...rest };
+    
+    if (mediaUrls !== undefined) {
+      updateData.mediaUrls = mediaUrls;
+    }
+    if (scheduledAt !== undefined) {
+      updateData.scheduledAt = scheduledAt ? new Date(scheduledAt) : null;
+    }
+    
+    const updated = await this.prisma.post.updateMany({
       where: { id, teamId },
-      data: updatePostDto,
+      data: updateData,
     });
+    
+    if (updated.count === 0) {
+      return null;
+    }
+    
+    return this.findOne(id, teamId);
   }
 
   async remove(id: string, teamId: string) {
