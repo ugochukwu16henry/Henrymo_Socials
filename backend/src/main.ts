@@ -1,10 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Enable CORS
   app.enableCors({
@@ -21,20 +23,36 @@ async function bootstrap() {
     }),
   );
 
-  // Root route handler (before setting API prefix)
-  app.getHttpAdapter().get('/', (req, res) => {
-    res.json({
-      message: 'HenryMo Socials API',
-      version: '1.0',
-      documentation: '/api/docs',
-      health: '/api',
-      status: 'running',
-      timestamp: new Date().toISOString(),
-    });
-  });
+  // Serve static files from frontend build (if exists)
+  const frontendDistPath = join(__dirname, '..', '..', 'frontend', 'dist');
+  const fs = require('fs');
+  const hasFrontend = fs.existsSync(frontendDistPath);
 
-  // API prefix
+  // API prefix (set before catch-all routes)
   app.setGlobalPrefix('api');
+
+  if (hasFrontend) {
+    // Serve static assets (JS, CSS, images, etc.) from frontend dist
+    app.useStaticAssets(frontendDistPath, {
+      index: false, // Don't serve index.html automatically
+      prefix: '/', // Serve from root path
+    });
+    
+    // Serve index.html for all non-API routes (SPA routing)
+    // This catch-all comes after API prefix, so /api/* routes are handled by controllers
+    app.getHttpAdapter().get('*', (req: any, res: any) => {
+      // Don't interfere with API routes (already handled by controllers)
+      if (req.url.startsWith('/api')) {
+        return res.status(404).json({ message: 'Not found' });
+      }
+      // Don't interfere with static assets (files with extensions)
+      if (/\.[a-zA-Z0-9]+$/.test(req.url.split('?')[0])) {
+        return res.status(404).json({ message: 'Not found' });
+      }
+      // Serve index.html for all other routes (SPA routing)
+      res.sendFile(join(frontendDistPath, 'index.html'));
+    });
+  }
 
   // Swagger documentation
   const config = new DocumentBuilder()
