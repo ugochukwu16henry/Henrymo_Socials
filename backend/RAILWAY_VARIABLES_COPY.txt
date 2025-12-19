@@ -1,0 +1,23 @@
+==========================================
+RAILWAY ENVIRONMENT VARIABLES
+Copy & Paste Ready
+==========================================
+
+VARIABLE 1: DATABASE_URL
+postgresql://postgres:YnxmzEjgGAVPNyZFlCDDontHnIrEipju@postgres-qdun.railway.internal:5432/railway
+
+VARIABLE 2: JWT_SECRET
+1c91b323892bb75681a920421ab193518712f9484b5ba2f686cc0d172485f6eecb3a61057444878260caa8cb33058cf10cc6641d8f4bfba3687b2140aa55fc97
+
+VARIABLE 3: NODE_ENV
+production
+
+==========================================
+INSTRUCTIONS:
+1. Railway Dashboard → Backend Service
+2. Click "Variables" tab
+3. Click "+ New Variable"
+4. Add each variable (name + value)
+5. Railway will auto-redeploy
+==========================================
+
