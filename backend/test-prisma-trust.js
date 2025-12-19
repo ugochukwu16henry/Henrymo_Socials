@@ -1,0 +1,28 @@
+require('dotenv').config({ path: '.env' });
+const { PrismaClient } = require('@prisma/client');
+
+console.log('Testing with:', process.env.DATABASE_URL?.substring(0, 60) + '...');
+
+const prisma = new PrismaClient({
+  log: ['error', 'warn'],
+});
+
+prisma.$connect()
+  .then(() => {
+    console.log('✅ SUCCESS! Prisma connected');
+    return prisma.$queryRaw`SELECT current_database(), current_user`;
+  })
+  .then((result) => {
+    console.log('✅ Query successful:', result[0]);
+    return prisma.$disconnect();
+  })
+  .then(() => {
+    console.log('✅ Test passed!');
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('❌ Error:', err.message);
+    prisma.$disconnect();
+    process.exit(1);
+  });
+
