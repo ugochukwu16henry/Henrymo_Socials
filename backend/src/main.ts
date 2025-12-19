@@ -21,6 +21,18 @@ async function bootstrap() {
     }),
   );
 
+  // Root route handler (before setting API prefix)
+  app.getHttpAdapter().get('/', (req, res) => {
+    res.json({
+      message: 'HenryMo Socials API',
+      version: '1.0',
+      documentation: '/api/docs',
+      health: '/api',
+      status: 'running',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   // API prefix
   app.setGlobalPrefix('api');
 
