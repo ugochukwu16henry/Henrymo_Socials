@@ -11,6 +11,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import ResearchPage from './pages/ResearchPage';
 import SocialAccountsPage from './pages/SocialAccountsPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import api from './services/api';
 
@@ -50,6 +51,7 @@ function App() {
           <Route path="/content" element={<ContentPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/research" element={<ResearchPage />} />
+          <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/" element={<Navigate to="/dashboard" />} />
         </Route>
       </Routes>

@@ -15,6 +15,7 @@ import { PublishingModule } from './publishing/publishing.module';
 import { RedisModule } from './redis/redis.module';
 import { RedisService } from './redis/redis.service';
 import { OAuthModule } from './oauth/oauth.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { OAuthModule } from './oauth/oauth.module';
     AnalyticsModule,
     ResearchModule,
     OAuthModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

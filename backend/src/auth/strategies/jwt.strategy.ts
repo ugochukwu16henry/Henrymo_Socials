@@ -20,6 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: any) {
     const user = await this.usersService.findOne(payload.sub);
     const { passwordHash, ...result } = user;
+    // isAdmin is already in result since it's included in the select
     return result;
   }
 }

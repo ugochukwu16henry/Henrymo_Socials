@@ -9,7 +9,8 @@ import {
   LogOut,
   Menu,
   X,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Shield
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -25,6 +26,7 @@ export default function Layout() {
     { name: 'Content', href: '/content', icon: FileText },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     { name: 'Research', href: '/research', icon: Search },
+    ...(user?.isAdmin ? [{ name: 'Admin', href: '/admin', icon: Shield }] : []),
   ];
 
   const isActive = (path: string) => location.pathname === path;

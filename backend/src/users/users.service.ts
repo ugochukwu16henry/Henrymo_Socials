@@ -37,6 +37,7 @@ export class UsersService {
         email: true,
         name: true,
         emailVerified: true,
+        isAdmin: true,
         createdAt: true,
         updatedAt: true,
         passwordHash: true, // Include for auth validation
