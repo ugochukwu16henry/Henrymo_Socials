@@ -58,7 +58,7 @@ export default function SocialAccountsPage() {
   }, [teams, selectedTeamId]);
 
   // Get connected accounts
-  const { data: accounts, isLoading } = useQuery({
+  const { data: accounts } = useQuery({
     queryKey: ['social-accounts', selectedTeamId],
     queryFn: async () => {
       if (!selectedTeamId) return [];
