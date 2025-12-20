@@ -8,7 +8,8 @@ import {
   Search, 
   LogOut,
   Menu,
-  X
+  X,
+  Link as LinkIcon
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -20,6 +21,7 @@ export default function Layout() {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Teams', href: '/teams', icon: Users },
+    { name: 'Social Accounts', href: '/social-accounts', icon: LinkIcon },
     { name: 'Content', href: '/content', icon: FileText },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     { name: 'Research', href: '/research', icon: Search },

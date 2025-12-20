@@ -81,10 +81,11 @@
 ### Backend
 
 1. **Publishing Engine**
-   - ⏳ BullMQ queue setup for scheduled posts
-   - ⏳ Post scheduler worker
-   - ⏳ Retry logic for failed posts
-   - ⏳ Platform-specific posting logic
+   - ✅ BullMQ queue setup for scheduled posts
+   - ✅ Post scheduler worker (PublishingProcessor)
+   - ✅ Platform-specific publisher architecture
+   - ⏳ Real API implementations (currently using stubs)
+   - ⏳ Retry logic for failed posts (basic error handling exists)
 
 2. **Social Media Integrations**
    - ⏳ OAuth flows for Meta (Facebook/Instagram)
@@ -162,6 +163,7 @@
 ## 🎯 Current Capabilities
 
 The application currently supports:
+
 - ✅ User authentication and authorization
 - ✅ Team management with multi-tenant architecture
 - ✅ Database schema for all core features
@@ -172,6 +174,7 @@ The application currently supports:
 ## 🔧 Technical Stack
 
 **Backend:**
+
 - NestJS (Node.js framework)
 - TypeScript
 - PostgreSQL (via Prisma ORM)
@@ -180,6 +183,7 @@ The application currently supports:
 - Swagger/OpenAPI documentation
 
 **Frontend:**
+
 - React 18
 - TypeScript
 - Vite
@@ -190,7 +194,9 @@ The application currently supports:
 - Axios
 
 **Infrastructure:**
+
 - Docker Compose
 - PostgreSQL
-- Redis
-
+- Redis (✅ Configured and integrated)
+- Railway deployment (✅ Configured)
+- Publishing Engine with BullMQ (✅ Implemented with stubs)

@@ -9,6 +9,8 @@ import TeamsPage from './pages/TeamsPage';
 import ContentPage from './pages/ContentPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import ResearchPage from './pages/ResearchPage';
+import SocialAccountsPage from './pages/SocialAccountsPage';
+import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import api from './services/api';
 
@@ -38,10 +40,13 @@ function App() {
       <Routes>
         <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage />} />
         <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" /> : <RegisterPage />} />
+        <Route path="/oauth/callback/meta" element={<OAuthCallbackPage />} />
         
         <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/teams" element={<TeamsPage />} />
+          <Route path="/social-accounts" element={<SocialAccountsPage />} />
+          <Route path="/social-accounts/:teamId" element={<SocialAccountsPage />} />
           <Route path="/content" element={<ContentPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/research" element={<ResearchPage />} />
