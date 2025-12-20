@@ -14,16 +14,25 @@ export default function TeamsPage() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [teamName, setTeamName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setIsCreating(true);
+    
     try {
       await api.post('/teams', { name: teamName });
       setTeamName('');
       setShowCreateModal(false);
       refetch();
-    } catch (error) {
-      console.error('Failed to create team:', error);
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to create team. Please try again.';
+      setError(errorMessage);
+      console.error('Failed to create team:', err);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -82,6 +91,11 @@ export default function TeamsPage() {
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h2 className="text-xl font-semibold mb-4">Create New Team</h2>
             <form onSubmit={handleCreateTeam}>
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
               <div className="mb-4">
                 <label htmlFor="teamName" className="block text-sm font-medium text-gray-700 mb-1">
                   Team Name
@@ -90,10 +104,14 @@ export default function TeamsPage() {
                   type="text"
                   id="teamName"
                   value={teamName}
-                  onChange={(e) => setTeamName(e.target.value)}
+                  onChange={(e) => {
+                    setTeamName(e.target.value);
+                    setError(null);
+                  }}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Enter team name"
                   required
+                  disabled={isCreating}
                 />
               </div>
               <div className="flex space-x-3">
@@ -109,9 +127,10 @@ export default function TeamsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                  disabled={isCreating}
+                  className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create
+                  {isCreating ? 'Creating...' : 'Create'}
                 </button>
               </div>
             </form>

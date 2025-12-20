@@ -37,9 +37,14 @@ const loadTokenFromStorage = () => {
 // Initialize token on module load
 loadTokenFromStorage();
 
-// Request interceptor
+// Request interceptor - ensure token is always up to date
 api.interceptors.request.use(
   (config) => {
+    // Always get the latest token from storage
+    const token = loadTokenFromStorage();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
