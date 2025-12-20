@@ -31,7 +31,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'User profile retrieved' })
   async getProfile(@Request() req) {
-    return req.user;
+    // Ensure isAdmin is included from the database
+    const user = await this.authService.getUserById(req.user.id);
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      isAdmin: user.isAdmin,
+    };
   }
 }
 
