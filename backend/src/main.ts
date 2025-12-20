@@ -93,9 +93,13 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   // Listen on 0.0.0.0 to allow external connections (required for Railway)
   await app.listen(port, '0.0.0.0');
+  
+  // Log startup completion
   const serverUrl = `http://0.0.0.0:${port}`;
   console.log(`🚀 Application is running on: ${serverUrl} (bound to all interfaces)`);
   console.log(`📚 API Documentation: ${serverUrl}/api/docs`);
+  console.log(`✅ Health check endpoint: ${serverUrl}/api/health`);
+  console.log(`✅ Application is ready and accepting connections`);
 }
 
 bootstrap();
