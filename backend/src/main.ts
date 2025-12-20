@@ -8,10 +8,13 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // Enable CORS
+  // Enable CORS with permissive settings
+  // Allow healthcheck from Railway's internal network
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: true, // Allow all origins (Railway's healthcheck needs this)
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Global validation pipe
@@ -36,8 +39,12 @@ async function bootstrap() {
     console.log(`   Serving API only. Build frontend to enable full-stack mode.`);
   }
 
-  // Register health check endpoint BEFORE setting API prefix
-  // This ensures it's accessible without CORS restrictions for Railway healthchecks
+  // API prefix (set before catch-all routes)
+  app.setGlobalPrefix('api');
+
+  // Register a direct health check endpoint (after prefix is set)
+  // This ensures Railway's healthcheck can reach it immediately
+  // Bypasses any potential CORS or middleware issues
   app.getHttpAdapter().get('/api/health', (req: any, res: any) => {
     res.status(200).json({
       status: 'ok',
@@ -45,9 +52,6 @@ async function bootstrap() {
       timestamp: new Date().toISOString(),
     });
   });
-
-  // API prefix (set before catch-all routes)
-  app.setGlobalPrefix('api');
 
   if (hasFrontend) {
     // Serve static assets (JS, CSS, images, etc.) from frontend dist
