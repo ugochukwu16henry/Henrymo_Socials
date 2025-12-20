@@ -3,7 +3,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { PublishingService } from './publishing.service';
 import { PublishingProcessor } from './publishing.processor';
 import { PrismaModule } from '../prisma/prisma.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PlatformFactory } from './platform-publishers/platform-factory';
 
 @Global()
@@ -11,12 +11,16 @@ import { PlatformFactory } from './platform-publishers/platform-factory';
   imports: [
     PrismaModule,
     ConfigModule,
-    BullModule.forRoot({
-      connection: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379', 10),
-        password: process.env.REDIS_PASSWORD,
-      },
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get('REDIS_HOST', 'localhost'),
+          port: configService.get('REDIS_PORT', 6379),
+          password: configService.get('REDIS_PASSWORD'),
+        },
+      }),
+      inject: [ConfigService],
     }),
     BullModule.registerQueue({
       name: 'publish-posts',

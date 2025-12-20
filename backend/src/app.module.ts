@@ -12,6 +12,8 @@ import { ContentModule } from './content/content.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ResearchModule } from './research/research.module';
 import { PublishingModule } from './publishing/publishing.module';
+import { RedisModule } from './redis/redis.module';
+import { RedisService } from './redis/redis.service';
 
 @Module({
   imports: [
@@ -25,6 +27,7 @@ import { PublishingModule } from './publishing/publishing.module';
       },
     ]),
     PrismaModule,
+    RedisModule,
     AuthModule,
     UsersModule,
     TeamsModule,

@@ -9,7 +9,7 @@ export class AppController {
 
   @Get()
   @ApiOperation({ summary: 'Health check endpoint' })
-  getHello(): { message: string; timestamp: string } {
+  async getHello(): Promise<{ message: string; timestamp: string; redis?: string }> {
     return this.appService.getHello();
   }
 }
