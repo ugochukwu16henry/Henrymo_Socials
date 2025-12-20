@@ -6,7 +6,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "build": "prisma generate && nest build",
+    "build": "npx prisma generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/main",
     "start:dev": "nest start --watch",
@@ -18,11 +18,11 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "migration:generate": "prisma migrate dev",
-    "migration:run": "prisma migrate deploy",
-    "migration:reset": "prisma migrate reset",
-    "prisma:generate": "prisma generate",
-    "prisma:studio": "prisma studio"
+    "migration:generate": "npx prisma migrate dev",
+    "migration:run": "npx prisma migrate deploy",
+    "migration:reset": "npx prisma migrate reset",
+    "prisma:generate": "npx prisma generate",
+    "prisma:studio": "npx prisma studio"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",
