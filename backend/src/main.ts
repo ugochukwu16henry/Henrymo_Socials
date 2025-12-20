@@ -28,6 +28,14 @@ async function bootstrap() {
   const fs = require('fs');
   const hasFrontend = fs.existsSync(frontendDistPath);
 
+  // Log frontend status
+  if (hasFrontend) {
+    console.log(`✅ Frontend build found at: ${frontendDistPath}`);
+  } else {
+    console.log(`⚠️  Frontend build not found at: ${frontendDistPath}`);
+    console.log(`   Serving API only. Build frontend to enable full-stack mode.`);
+  }
+
   // API prefix (set before catch-all routes)
   app.setGlobalPrefix('api');
 
@@ -36,6 +44,11 @@ async function bootstrap() {
     app.useStaticAssets(frontendDistPath, {
       index: false, // Don't serve index.html automatically
       prefix: '/', // Serve from root path
+    });
+    
+    // Handle root route - serve frontend index.html
+    app.getHttpAdapter().get('/', (req: any, res: any) => {
+      res.sendFile(join(frontendDistPath, 'index.html'));
     });
     
     // Serve index.html for all non-API routes (SPA routing)
@@ -51,6 +64,19 @@ async function bootstrap() {
       }
       // Serve index.html for all other routes (SPA routing)
       res.sendFile(join(frontendDistPath, 'index.html'));
+    });
+  } else {
+    // Fallback: serve API info at root when frontend not built
+    app.getHttpAdapter().get('/', (req: any, res: any) => {
+      res.json({
+        message: 'HenryMo Socials API',
+        version: '1.0',
+        documentation: '/api/docs',
+        health: '/api',
+        status: 'running',
+        timestamp: new Date().toISOString(),
+        note: 'Frontend not built. Build frontend to enable full-stack mode.',
+      });
     });
   }
 
