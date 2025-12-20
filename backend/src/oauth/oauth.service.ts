@@ -111,7 +111,7 @@ export class OAuthService {
         handle: userInfo.username || userInfo.name,
         accessToken: longLivedToken,
         refreshToken: null, // Meta doesn't use refresh tokens, but tokens can be extended
-        expiresAt,
+        expiresAt: expiresAt.toISOString(),
       };
 
       // Check if account already exists
