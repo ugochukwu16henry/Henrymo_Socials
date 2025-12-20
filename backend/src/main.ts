@@ -36,6 +36,16 @@ async function bootstrap() {
     console.log(`   Serving API only. Build frontend to enable full-stack mode.`);
   }
 
+  // Register health check endpoint BEFORE setting API prefix
+  // This ensures it's accessible without CORS restrictions for Railway healthchecks
+  app.getHttpAdapter().get('/api/health', (req: any, res: any) => {
+    res.status(200).json({
+      status: 'ok',
+      message: 'HenryMo Socials API is running!',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   // API prefix (set before catch-all routes)
   app.setGlobalPrefix('api');
 
