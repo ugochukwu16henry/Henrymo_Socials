@@ -91,9 +91,10 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.PORT || 3000;
-  await app.listen(port);
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+  // Listen on 0.0.0.0 to allow external connections (required for Railway)
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 Application is running on: ${await app.getUrl()}`);
+  console.log(`📚 API Documentation: ${await app.getUrl()}/api/docs`);
 }
 
 bootstrap();
