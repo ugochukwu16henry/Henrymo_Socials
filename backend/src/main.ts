@@ -90,7 +90,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
+  // Use PORT from environment (Railway assigns this dynamically) or default to 3000
   const port = process.env.PORT || 3000;
+  console.log(`🔧 Starting server on port: ${port} (PORT env: ${process.env.PORT || 'not set, using default'})`);
+  
   // Listen on 0.0.0.0 to allow external connections (required for Railway)
   await app.listen(port, '0.0.0.0');
   
