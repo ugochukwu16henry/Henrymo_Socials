@@ -1,11 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional, Inject, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 
 @Injectable()
 export class ContentService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(ContentService.name);
+  private publishingService: any;
+
+  constructor(
+    private prisma: PrismaService,
+    @Optional() @Inject('PUBLISHING_SERVICE') publishingService?: any,
+  ) {
+    this.publishingService = publishingService;
+  }
 
   async create(userId: string, teamId: string, createPostDto: CreatePostDto) {
     const { platformIds, mediaUrls, scheduledAt, status, contentText } = createPostDto;
@@ -15,7 +23,7 @@ export class ContentService {
         contentText,
         mediaUrls: mediaUrls ? mediaUrls : null,
         scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-        status: status || 'draft',
+        status: scheduledAt ? (status || 'scheduled') : (status || 'draft'),
         userId,
         teamId,
       },
@@ -36,7 +44,20 @@ export class ContentService {
       );
     }
 
-    return this.findOne(post.id, teamId);
+    const createdPost = await this.findOne(post.id, teamId);
+
+    // If post is scheduled, add it to the publishing queue
+    if (createdPost?.scheduledAt && createdPost.status === 'scheduled' && this.publishingService) {
+      try {
+        await this.publishingService.schedulePost(post.id);
+        this.logger.log(`Scheduled post ${post.id} for publishing`);
+      } catch (error: any) {
+        // Log error but don't fail the post creation
+        this.logger.error(`Failed to schedule post ${post.id}: ${error.message}`);
+      }
+    }
+
+    return createdPost;
   }
 
   async findAll(teamId: string) {
@@ -86,6 +107,11 @@ export class ContentService {
     const { mediaUrls, scheduledAt, ...rest } = updatePostDto;
     const updateData: any = { ...rest };
     
+    // Get the existing post to check if scheduledAt changed
+    const existingPost = await this.prisma.post.findFirst({
+      where: { id, teamId },
+    });
+
     if (mediaUrls !== undefined) {
       updateData.mediaUrls = mediaUrls;
     }
@@ -101,8 +127,32 @@ export class ContentService {
     if (updated.count === 0) {
       return null;
     }
+
+    const updatedPost = await this.findOne(id, teamId);
+
+    // If scheduledAt changed and post is now scheduled, update the queue
+    if (this.publishingService && updatedPost) {
+      if (scheduledAt !== undefined && updatedPost.scheduledAt) {
+        // Cancel old jobs and reschedule
+        try {
+          await this.publishingService.cancelScheduledPost(id);
+          await this.publishingService.schedulePost(id);
+          this.logger.log(`Rescheduled post ${id} for publishing`);
+        } catch (error: any) {
+          this.logger.error(`Failed to reschedule post ${id}: ${error.message}`);
+        }
+      } else if (existingPost?.scheduledAt && !updatedPost.scheduledAt) {
+        // If scheduledAt was removed, cancel scheduled jobs
+        try {
+          await this.publishingService.cancelScheduledPost(id);
+          this.logger.log(`Cancelled scheduled jobs for post ${id}`);
+        } catch (error: any) {
+          this.logger.error(`Failed to cancel scheduled post ${id}: ${error.message}`);
+        }
+      }
+    }
     
-    return this.findOne(id, teamId);
+    return updatedPost;
   }
 
   async remove(id: string, teamId: string) {

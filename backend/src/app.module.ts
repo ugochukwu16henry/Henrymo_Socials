@@ -11,6 +11,7 @@ import { SocialAccountsModule } from './social-accounts/social-accounts.module';
 import { ContentModule } from './content/content.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ResearchModule } from './research/research.module';
+import { PublishingModule } from './publishing/publishing.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ResearchModule } from './research/research.module';
     UsersModule,
     TeamsModule,
     SocialAccountsModule,
+    PublishingModule,
     ContentModule,
     AnalyticsModule,
     ResearchModule,
