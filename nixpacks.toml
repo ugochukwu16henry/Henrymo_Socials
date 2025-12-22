@@ -10,13 +10,13 @@ cmds = [
 
 [phases.build]
 cmds = [
-  "echo 'Building frontend...'",
-  "cd frontend && npm run build || echo 'Frontend build failed - continuing'",
-  "echo 'Building backend...'",
-  "cd backend && npx prisma generate",
-  "cd backend && npm run build",
-  "echo 'Build complete. Frontend dist location:'",
-  "ls -la ../frontend/dist 2>/dev/null || echo 'Frontend dist not found'"
+  "echo '=== Starting Build Process ==='",
+  "echo 'Building frontend and backend...'",
+  "npm run build || (echo 'Build failed!' && exit 1)",
+  "echo 'Verifying backend build output...'",
+  "test -f backend/dist/main.js || (echo 'ERROR: backend/dist/main.js not found!' && ls -la backend/dist/ 2>&1 && exit 1)",
+  "echo '✅ Backend build verified: backend/dist/main.js exists'",
+  "echo 'Build complete!'"
 ]
 
 [start]
