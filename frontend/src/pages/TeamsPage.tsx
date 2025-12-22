@@ -5,11 +5,17 @@ import { useState } from 'react';
 
 export default function TeamsPage() {
   const queryClient = useQueryClient();
-  const { data: teams } = useQuery({
+  const { data: teams, isLoading, error } = useQuery({
     queryKey: ['teams'],
     queryFn: async () => {
-      const response = await api.get('/teams');
-      return response.data;
+      try {
+        const response = await api.get('/teams');
+        console.log('Teams API response:', response.data);
+        return response.data;
+      } catch (err: any) {
+        console.error('Error fetching teams:', err);
+        throw err;
+      }
     },
   });
 
@@ -17,6 +23,12 @@ export default function TeamsPage() {
   const [teamName, setTeamName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+
+  // Debug log
+  console.log('TeamsPage - teams data:', teams);
+  console.log('TeamsPage - teams length:', teams?.length);
+  console.log('TeamsPage - isLoading:', isLoading);
+  console.log('TeamsPage - error:', error);
 
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +66,24 @@ export default function TeamsPage() {
         </button>
       </div>
 
-      {teams && teams.length > 0 ? (
+      {/* Error Display */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-600">
+            Error loading teams: {error instanceof Error ? error.message : 'Unknown error'}
+          </p>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="bg-white rounded-lg shadow p-12 text-center">
+          <p className="text-gray-500">Loading teams...</p>
+        </div>
+      )}
+
+      {/* Teams List */}
+      {!isLoading && !error && teams && teams.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {teams.map((team: any) => (
             <div key={team.id} className="bg-white rounded-lg shadow p-6">
@@ -73,7 +102,7 @@ export default function TeamsPage() {
             </div>
           ))}
         </div>
-      ) : (
+      ) : !isLoading && !error ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <Users className="mx-auto text-gray-400 mb-4" size={48} />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No teams yet</h3>
@@ -85,7 +114,7 @@ export default function TeamsPage() {
             Create Team
           </button>
         </div>
-      )}
+      ) : null}
 
       {/* Create Team Modal */}
       {showCreateModal && (
