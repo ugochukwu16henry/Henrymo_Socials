@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/services/api';
-import { Users, UsersRound, FileText, Link as LinkIcon, TrendingUp, Shield, Calendar } from 'lucide-react';
-import { useState } from 'react';
+import { Users, UsersRound, FileText, Link as LinkIcon, Shield } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function AdminDashboardPage() {
@@ -9,19 +9,21 @@ export default function AdminDashboardPage() {
   const [selectedView, setSelectedView] = useState<'dashboard' | 'users' | 'teams'>('dashboard');
 
   // Fetch dashboard stats
-  const { data: dashboardData, isLoading: statsLoading } = useQuery({
+  const { data: dashboardData, isLoading: statsLoading, error: dashboardError } = useQuery({
     queryKey: ['admin-dashboard'],
     queryFn: async () => {
       const response = await api.get('/admin/dashboard');
       return response.data;
     },
     retry: false,
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        navigate('/dashboard');
-      }
-    },
   });
+
+  // Handle dashboard errors
+  useEffect(() => {
+    if (dashboardError && (dashboardError as any).response?.status === 403) {
+      navigate('/dashboard');
+    }
+  }, [dashboardError, navigate]);
 
   // Fetch all users
   const { data: users, isLoading: usersLoading } = useQuery({
@@ -56,7 +58,13 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const stats = dashboardData?.stats || {};
+  const stats = dashboardData?.stats || {
+    totalUsers: 0,
+    totalTeams: 0,
+    totalPosts: 0,
+    totalSocialAccounts: 0,
+    usersLast30Days: 0,
+  };
   const recentUsers = dashboardData?.recentUsers || [];
   const recentTeams = dashboardData?.recentTeams || [];
 
@@ -319,7 +327,9 @@ export default function AdminDashboardPage() {
                         <div className="flex items-center">
                           <div className="text-sm font-medium text-gray-900">{user.name}</div>
                           {user.isAdmin && (
-                            <Shield className="ml-2 h-4 w-4 text-primary-600" title="Admin" />
+                            <span title="Admin">
+                              <Shield className="ml-2 h-4 w-4 text-primary-600" />
+                            </span>
                           )}
                         </div>
                       </td>
