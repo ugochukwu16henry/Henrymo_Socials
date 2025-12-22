@@ -6,7 +6,11 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  console.log('🚀 Starting application bootstrap...');
+  console.log(`📦 Environment: PORT=${process.env.PORT || 'not set'}, NODE_ENV=${process.env.NODE_ENV || 'not set'}`);
+  
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  console.log('✅ NestJS application factory created');
 
   // Enable CORS with permissive settings
   // Allow healthcheck from Railway's internal network
@@ -105,19 +109,27 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   // Use PORT from environment (Railway assigns this dynamically) or default to 3000
-  const port = process.env.PORT || 3000;
-  console.log(`🔧 Starting server on port: ${port} (PORT env: ${process.env.PORT || 'not set, using default'})`);
+  const port = parseInt(process.env.PORT || '3000', 10);
+  console.log(`🔧 Preparing to start server on port: ${port} (PORT env: ${process.env.PORT || 'not set, using default 3000'})`);
   
-  // Listen on 0.0.0.0 to allow external connections (required for Railway)
-  await app.listen(port, '0.0.0.0');
-  
-  // Log startup completion
-  const serverUrl = `http://0.0.0.0:${port}`;
-  console.log(`🚀 Application is running on: ${serverUrl} (bound to all interfaces)`);
-  console.log(`📚 API Documentation: ${serverUrl}/api/docs`);
-  console.log(`✅ Health check endpoint: ${serverUrl}/api/health`);
-  console.log(`✅ Application is ready and accepting connections`);
+  try {
+    // Listen on 0.0.0.0 to allow external connections (required for Railway)
+    await app.listen(port, '0.0.0.0');
+    
+    // Log startup completion
+    const serverUrl = `http://0.0.0.0:${port}`;
+    console.log(`🚀 Application is running on: ${serverUrl} (bound to all interfaces)`);
+    console.log(`📚 API Documentation: ${serverUrl}/api/docs`);
+    console.log(`✅ Health check endpoint: ${serverUrl}/api/health`);
+    console.log(`✅ Application is ready and accepting connections`);
+  } catch (error: any) {
+    console.error('❌ Failed to start server:', error);
+    throw error;
+  }
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('❌ Failed to start application:', error);
+  process.exit(1);
+});
 
