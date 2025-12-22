@@ -10,10 +10,22 @@ export default function TeamsPage() {
     queryFn: async () => {
       try {
         const response = await api.get('/teams');
-        console.log('Teams API response:', response.data);
-        return response.data;
+        console.log('Teams API response:', response);
+        console.log('Teams API response.data:', response.data);
+        console.log('Teams API response.data type:', typeof response.data);
+        console.log('Teams API response.data is array:', Array.isArray(response.data));
+        
+        // Ensure we return an array
+        const teamsData = response.data;
+        if (Array.isArray(teamsData)) {
+          return teamsData;
+        } else {
+          console.warn('API response is not an array, returning empty array');
+          return [];
+        }
       } catch (err: any) {
         console.error('Error fetching teams:', err);
+        console.error('Error response:', err.response);
         throw err;
       }
     },
@@ -24,11 +36,19 @@ export default function TeamsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
-  // Debug log
-  console.log('TeamsPage - teams data:', teams);
-  console.log('TeamsPage - teams length:', teams?.length);
-  console.log('TeamsPage - isLoading:', isLoading);
-  console.log('TeamsPage - error:', error);
+  // Debug logs
+  console.log('=== TeamsPage Debug ===');
+  console.log('teams data:', teams);
+  console.log('teams type:', typeof teams);
+  console.log('teams is array:', Array.isArray(teams));
+  console.log('teams length:', teams?.length);
+  console.log('isLoading:', isLoading);
+  console.log('error:', error);
+  
+  // Verify teams structure
+  if (teams && !Array.isArray(teams)) {
+    console.warn('WARNING: teams is not an array!', teams);
+  }
 
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,11 +56,14 @@ export default function TeamsPage() {
     setIsCreating(true);
     
     try {
-      await api.post('/teams', { name: teamName });
+      const response = await api.post('/teams', { name: teamName });
+      console.log('Team created successfully:', response.data);
       setTeamName('');
       setShowCreateModal(false);
       // Invalidate teams query cache so all pages using it will refetch
-      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      await queryClient.invalidateQueries({ queryKey: ['teams'] });
+      // Also refetch to ensure we have the latest data
+      await queryClient.refetchQueries({ queryKey: ['teams'] });
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to create team. Please try again.';
       setError(errorMessage);
