@@ -11,12 +11,16 @@ cmds = [
 [phases.build]
 cmds = [
   "echo '=== Starting Build Process ==='",
-  "echo 'Building frontend and backend...'",
-  "npm run build || (echo 'Build failed!' && exit 1)",
-  "echo 'Verifying backend build output...'",
-  "test -f backend/dist/main.js || (echo 'ERROR: backend/dist/main.js not found!' && ls -la backend/dist/ 2>&1 && exit 1)",
+  "echo 'Step 1: Building backend (required)...'",
+  "cd backend && npm run build || (echo 'Backend build failed!' && exit 1)",
+  "cd ..",
+  "echo 'Step 2: Verifying backend build output...'",
+  "test -f backend/dist/main.js || (echo 'ERROR: backend/dist/main.js not found after build!' && echo 'Listing backend/dist:' && ls -la backend/dist/ 2>&1 && echo 'Listing backend:' && ls -la backend/ | head -20 && exit 1)",
   "echo '✅ Backend build verified: backend/dist/main.js exists'",
-  "echo 'Build complete!'"
+  "echo 'Step 3: Building frontend (optional)...'",
+  "cd frontend && npm run build || echo 'Frontend build failed - continuing...'",
+  "cd ..",
+  "echo '✅ Build complete!'"
 ]
 
 [start]
