@@ -33,7 +33,7 @@ export default function TeamsPage() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [teamName, setTeamName] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
   // Debug logs
@@ -52,7 +52,7 @@ export default function TeamsPage() {
 
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setCreateError(null);
     setIsCreating(true);
     
     try {
@@ -66,7 +66,7 @@ export default function TeamsPage() {
       await queryClient.refetchQueries({ queryKey: ['teams'] });
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to create team. Please try again.';
-      setError(errorMessage);
+      setCreateError(errorMessage);
       console.error('Failed to create team:', err);
     } finally {
       setIsCreating(false);
@@ -90,10 +90,12 @@ export default function TeamsPage() {
       </div>
 
       {/* Error Display */}
-      {error && (
+      {(error || createError) && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-sm text-red-600">
-            Error loading teams: {error instanceof Error ? error.message : 'Unknown error'}
+            {error 
+              ? `Error loading teams: ${error instanceof Error ? error.message : String(error)}` 
+              : createError || 'An error occurred'}
           </p>
         </div>
       )}
@@ -145,9 +147,9 @@ export default function TeamsPage() {
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h2 className="text-xl font-semibold mb-4">Create New Team</h2>
             <form onSubmit={handleCreateTeam}>
-              {error && (
+              {createError && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600">{error}</p>
+                  <p className="text-sm text-red-600">{createError}</p>
                 </div>
               )}
               <div className="mb-4">
@@ -160,7 +162,7 @@ export default function TeamsPage() {
                   value={teamName}
                   onChange={(e) => {
                     setTeamName(e.target.value);
-                    setError(null);
+                    setCreateError(null);
                   }}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Enter team name"
