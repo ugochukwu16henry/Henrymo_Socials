@@ -1,10 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/services/api';
 import { Plus, Users } from 'lucide-react';
 import { useState } from 'react';
 
 export default function TeamsPage() {
-  const { data: teams, refetch } = useQuery({
+  const queryClient = useQueryClient();
+  const { data: teams } = useQuery({
     queryKey: ['teams'],
     queryFn: async () => {
       const response = await api.get('/teams');
@@ -26,7 +27,8 @@ export default function TeamsPage() {
       await api.post('/teams', { name: teamName });
       setTeamName('');
       setShowCreateModal(false);
-      refetch();
+      // Invalidate teams query cache so all pages using it will refetch
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to create team. Please try again.';
       setError(errorMessage);
