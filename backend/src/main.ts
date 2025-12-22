@@ -80,21 +80,6 @@ async function bootstrap() {
     app.getHttpAdapter().get('/', (req: any, res: any) => {
       res.sendFile(join(frontendDistPath, 'index.html'));
     });
-    
-    // Serve index.html for all non-API routes (SPA routing)
-    // This catch-all comes after API prefix, so /api/* routes are handled by controllers
-    app.getHttpAdapter().get('*', (req: any, res: any) => {
-      // Don't interfere with API routes (already handled by controllers)
-      if (req.url.startsWith('/api')) {
-        return res.status(404).json({ message: 'Not found' });
-      }
-      // Don't interfere with static assets (files with extensions)
-      if (/\.[a-zA-Z0-9]+$/.test(req.url.split('?')[0])) {
-        return res.status(404).json({ message: 'Not found' });
-      }
-      // Serve index.html for all other routes (SPA routing)
-      res.sendFile(join(frontendDistPath, 'index.html'));
-    });
   } else {
     // Fallback: serve API info at root when frontend not built
     app.getHttpAdapter().get('/', (req: any, res: any) => {
@@ -119,6 +104,32 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
+
+  // SPA fallback: serve index.html for non-API routes (client-side routing)
+  // This must be registered after Swagger but won't interfere with API routes
+  // because NestJS controllers handle /api/* routes before this middleware runs
+  if (hasFrontend) {
+    app.use((req: any, res: any, next: any) => {
+      // Let API routes pass through to NestJS controllers
+      if (req.url.startsWith('/api/')) {
+        return next();
+      }
+      // Let static assets pass through
+      if (/\.[a-zA-Z0-9]+$/.test(req.url.split('?')[0])) {
+        return next();
+      }
+      // Let root route pass through (already handled)
+      if (req.url === '/' || req.url === '') {
+        return next();
+      }
+      // For all other routes, serve index.html (SPA routing)
+      res.sendFile(join(frontendDistPath, 'index.html'), (err: any) => {
+        if (err) {
+          next(err);
+        }
+      });
+    });
+  }
 
   // Use PORT from environment (Railway assigns this dynamically) or default to 3000
   const port = parseInt(process.env.PORT || '3000', 10);
