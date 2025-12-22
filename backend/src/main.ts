@@ -6,11 +6,23 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  // Write to stderr immediately to ensure Railway captures it
+  console.error('🚀 Starting application bootstrap...');
+  console.error(`📦 Environment: PORT=${process.env.PORT || 'not set'}, NODE_ENV=${process.env.NODE_ENV || 'not set'}`);
   console.log('🚀 Starting application bootstrap...');
   console.log(`📦 Environment: PORT=${process.env.PORT || 'not set'}, NODE_ENV=${process.env.NODE_ENV || 'not set'}`);
   
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  console.log('✅ NestJS application factory created');
+  let app: NestExpressApplication;
+  try {
+    app = await NestFactory.create<NestExpressApplication>(AppModule);
+    console.log('✅ NestJS application factory created');
+    console.error('✅ NestJS application factory created');
+  } catch (error: any) {
+    console.error('❌ Failed to create NestJS application:', error);
+    console.error('Error message:', error?.message);
+    console.error('Error stack:', error?.stack);
+    throw error;
+  }
 
   // Enable CORS with permissive settings
   // Allow healthcheck from Railway's internal network
@@ -124,12 +136,26 @@ async function bootstrap() {
     console.log(`✅ Application is ready and accepting connections`);
   } catch (error: any) {
     console.error('❌ Failed to start server:', error);
+    console.error('Error stack:', error?.stack);
     throw error;
   }
 }
 
+// Ensure we catch all errors
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  process.exit(1);
+});
+
 bootstrap().catch((error) => {
   console.error('❌ Failed to start application:', error);
+  console.error('Error message:', error?.message);
+  console.error('Error stack:', error?.stack);
   process.exit(1);
 });
 
